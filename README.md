@@ -1,99 +1,157 @@
-# trackpac-mcp
+# Trackpac MCP Server
 
-An MCP server for the Trackpac API (`https://api.trackpac.io`), so Claude (or
-any other MCP client) can query and manage your devices, organisations,
-dashboards, assets, geofences, actions, reports, contacts, bases, tags and
-billing directly.
+An [MCP](https://modelcontextprotocol.io) server for the
+[Trackpac](https://trackpac.io) IoT platform. It lets Claude, or any other MCP
+client, work with your Trackpac account in plain language: list devices, read
+recent frames, manage geofences, dashboards, assets, actions, reports, contacts
+and more.
 
-It's built automatically from Trackpac's own OpenAPI spec
-(`https://api.trackpac.io/openapi.json`) using [FastMCP](https://gofastmcp.com)'s
-`from_openapi()` — every request/response shape comes straight from the spec,
-so it stays in sync with the real API without hand-written wrapper code.
+> "Which of my trackers haven't reported in the last 24 hours?"
+> "Create a geofence around our Rotterdam depot and alert the ops contact on exit."
+> "Show me the last week of location history for asset *Trailer 12*."
 
-## What's excluded, and why
+## Features
 
-- **`/ingest/*` (tag `Ingest`, ~90 routes)** — the per-device-brand webhook
-  endpoints that LoRaWAN network servers / hardware POST raw sensor payloads
-  to. Not something a person or assistant would ever call, so they're
-  stripped before the tool list is built (as requested).
+- **Full API coverage** of the Trackpac REST API (`https://api.trackpac.io`):
+  users and API keys, organisations, devices, frames, dashboards, assets,
+  reports, actions, contacts, geofences, bases, tags, LNS, billing and the
+  LoRaWAN location engine.
+- **Always in sync.** Tools are generated at startup from Trackpac's live
+  [OpenAPI spec](https://api.trackpac.io/openapi.json) using
+  [FastMCP](https://gofastmcp.com), so new API endpoints show up after a restart
+  with no code changes.
+- **API-key authentication.** Requests are sent with your key in the
+  `X-API-Key` header.
+- **Thin pass-through.** There is no extra caching, retry logic or rate
+  limiting, so your account's normal Trackpac permissions and limits apply.
 
-Everything else — devices, organisations, dashboards, assets, reports,
-actions, contacts, geofences, bases, billing (account-facing bits), tags,
-frames, the location engine, and user/API-key management — is exposed. As of
-the spec's current version (Trackpac API v2.5.15) that's **148 tools**. This
-includes both reads and writes (e.g. `delete_device_device`,
-`delete_organisation_organisation` exist) — there's no separate read-only
-mode, so treat the API key you give this server with the same care as one
-in the Trackpac dashboard.
+## Requirements
 
-If 148 tools feels like too many for your MCP client's tool picker, the
-easiest reduction is to change the `route_maps` in `server.py` so read-only
-`GET` requests become MCP *resources* instead of *tools* (FastMCP supports
-this natively via `MCPType.RESOURCE` / `RESOURCE_TEMPLATE`) — that would cut
-the tool list roughly in half while keeping the data still reachable. Left
-as everything-is-a-tool for now since that's the most reliable way for a
-chat assistant to actually call these with arguments.
+- Python 3.10 or newer
+- A Trackpac account and an API key
 
-## Setup
-
-1. **Install dependencies** (Python 3.10+):
-
-   ```bash
-   cd trackpac-mcp
-   python3 -m venv .venv && source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-2. **Get an API key.** This server is API-key-only — it sends `X-API-Key` on
-   every request and never uses a bearer token, even though the Trackpac API
-   itself accepts both. Create a key from the Trackpac dashboard's API keys
-   settings page (or however you normally provision one). If your account
-   doesn't have a key yet and the dashboard doesn't offer a way to create
-   one, you'll need to get your first key through whatever authenticated
-   flow Trackpac normally uses for that (this server intentionally won't do
-   that bootstrapping step for you, to keep it API-key-only end to end).
-
-3. **Set the credential** — copy `.env.example` to `.env` and fill in
-   `TRACKPAC_API_KEY`, or set it directly in your MCP client's server config
-   (see below).
-
-4. **Run it standalone** (useful for a sanity check):
-
-   ```bash
-   TRACKPAC_API_KEY=your-key python server.py
-   ```
-
-## Wiring it into Claude
-
-**Claude Code / Claude CLI:**
+## Installation
 
 ```bash
-claude mcp add trackpac --env TRACKPAC_API_KEY=your-key -- python /absolute/path/to/trackpac-mcp/server.py
+git clone https://github.com/trackpac-ltd/trackpac-mcp.git
+cd trackpac-mcp
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-**Claude Desktop:** add an entry like the one in
-`claude_desktop_config.example.json` to your
-`claude_desktop_config.json`, with the real absolute path to `server.py` and
-your key.
+## Getting an API key
 
-## How it works / notes
+Create an API key in the Trackpac dashboard under your user settings. The key
+has the same access as your user account, so keep it private and revoke it from
+the dashboard if it is ever exposed.
 
-- `server.py` fetches `https://api.trackpac.io/openapi.json` live at
-  startup, strips the excluded routes, and hands the result to
-  `FastMCP.from_openapi()` along with an `httpx` client carrying your auth
-  header. Restart the server to pick up any API changes.
-- Tool names come from the spec's `operationId`s (FastMCP slugifies them),
-  e.g. `read_devices_organisation`, `create_geofence_geofence_post`,
-  `send_downlink_device`. They're a little verbose but self-describing.
-- No response caching, rate limiting, or retry logic is added — this is a
-  thin, faithful pass-through to the real API, so normal Trackpac rate
-  limits and permissions apply.
-- Validated during development by fetching the live spec and confirming it
-  builds cleanly into 148 tools with the ingest/webhook routes removed and
-  everything else intact (grouped by the API's own tags: Users,
-  Organisations, Devices, Frames, Dashboards, Assets, Reports, LoRaWAN
-  Location Engine, Actions, Contacts, Geofences, Bases, Billing, Tags, LNS).
-  Full end-to-end calls against live data weren't exercised (no API key was
-  available in the build environment) — worth doing a couple of read-only
-  calls (e.g. list your organisations) first, before relying on it for
-  anything that writes.
+## Configuration
+
+The server reads a single environment variable:
+
+| Variable           | Required | Description           |
+| ------------------ | -------- | --------------------- |
+| `TRACKPAC_API_KEY` | Yes      | Your Trackpac API key |
+
+You can set it in your MCP client's config (recommended, see below). For local
+testing, you can instead copy `.env.example` to `.env` and export it in your
+shell.
+
+## Using it with Claude
+
+### Claude Code
+
+```bash
+claude mcp add trackpac --env TRACKPAC_API_KEY=your-key -- /absolute/path/to/trackpac-mcp/.venv/bin/python /absolute/path/to/trackpac-mcp/server.py
+```
+
+### Claude Desktop
+
+Add the server to your `claude_desktop_config.json` (an example is in
+[`claude_desktop_config.example.json`](claude_desktop_config.example.json)):
+
+```json
+{
+  "mcpServers": {
+    "trackpac": {
+      "command": "/absolute/path/to/trackpac-mcp/.venv/bin/python",
+      "args": ["/absolute/path/to/trackpac-mcp/server.py"],
+      "env": {
+        "TRACKPAC_API_KEY": "your-trackpac-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop after you save the file.
+
+### Other MCP clients
+
+Run the server over stdio:
+
+```bash
+TRACKPAC_API_KEY=your-key python server.py
+```
+
+## Tools
+
+Each tool maps to one Trackpac API endpoint, and its name comes from the
+endpoint's OpenAPI `operationId`. For example:
+
+| Tool                                 | What it does                      |
+| ------------------------------------ | --------------------------------- |
+| `get_organisations_organisation_get` | List your organisations           |
+| `read_devices_device_get`            | List devices                      |
+| `read_frames_frame`                  | Read uplink frames for a device   |
+| `create_geofence_geofence_post`      | Create a geofence                 |
+| `send_downlink_device`               | Queue a downlink to a device      |
+
+As of Trackpac API v2.5.15 the server exposes about 150 tools. Your MCP client
+lists the exact set when it connects.
+
+### Excluded endpoints
+
+A few endpoints exist for machine-to-machine traffic, not for people, so the
+server leaves them out:
+
+- **`/ingest/*`**: webhook endpoints where LoRaWAN network servers and
+  hardware send raw sensor payloads.
+
+## Safety
+
+The server exposes **write and delete operations** as well as reads (for
+example `delete_device_device` and `delete_organisation_organisation`). Your
+assistant can do anything your API key allows.
+
+- Use a key from a user with only the access you need.
+- Keep your MCP client's tool-approval prompts turned on for destructive
+  actions.
+- Start with read-only requests while you get familiar with it.
+
+## Customising
+
+All the logic lives in [`server.py`](server.py):
+
+- **Exclude more endpoints**: add tags to `EXCLUDED_TAGS`, path prefixes to
+  `EXCLUDED_PATH_PREFIXES`, or path keywords to `EXCLUDED_PATH_KEYWORDS`.
+- **Reduce the tool count**: change `route_maps` so `GET` endpoints become MCP
+  resources (`MCPType.RESOURCE` / `MCPType.RESOURCE_TEMPLATE`) instead of tools.
+  This roughly halves the tool list. It's handy if your client struggles with
+  long tool lists, but some assistants work less reliably with resources.
+
+## How it works
+
+At startup, `server.py`:
+
+1. Fetches `https://api.trackpac.io/openapi.json`.
+2. Removes the excluded webhook routes.
+3. Passes the spec to `FastMCP.from_openapi()` with an HTTP client that carries
+   your API key.
+
+Restart the server to pick up API changes.
+
+## Contributing
+
+Issues and pull requests are welcome.

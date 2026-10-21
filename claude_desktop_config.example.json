@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "trackpac": {
-      "command": "python",
+      "command": "/absolute/path/to/trackpac-mcp/.venv/bin/python",
       "args": ["/absolute/path/to/trackpac-mcp/server.py"],
       "env": {
         "TRACKPAC_API_KEY": "your-trackpac-api-key-here"
