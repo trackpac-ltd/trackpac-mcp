@@ -28,7 +28,7 @@ and more.
 ## Requirements
 
 - Python 3.10 or newer
-- A Trackpac account and an API key
+- A Trackpac account and an API key (see [Getting an API key](#getting-an-api-key))
 
 ## Installation
 
@@ -42,9 +42,20 @@ pip install -r requirements.txt
 
 ## Getting an API key
 
-Create an API key in the Trackpac dashboard under your user settings. The key
-has the same access as your user account, so keep it private and revoke it from
-the dashboard if it is ever exposed.
+1. Sign in to Trackpac and open your account page:
+   **<https://app.trackpac.io/account>**
+2. Click **Generate API key**.
+3. Give the key a name that tells you where it's used, for example
+   `Claude Desktop - laptop`.
+4. Copy the key and keep it somewhere safe, such as a password manager. You'll
+   paste it into your MCP client's config in the next step.
+
+The key has the same access as your Trackpac user, so treat it like a password.
+Never commit it to git or share it in chat. If a key is ever exposed, revoke it
+on the same account page and generate a new one.
+
+It's a good idea to create a separate key for each machine or client. That way
+you can revoke one without breaking the others.
 
 ## Configuration
 
