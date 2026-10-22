@@ -14,7 +14,7 @@ An [MCP](https://modelcontextprotocol.io) server for the [Trackpac](https://trac
 
 Use our hosted server without cloning this repository or installing Python. The transport is **Streamable HTTP**, and each client sends its own key in the **`X-API-Key`** header.
 
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Trackpac-007ACC?style=for-the-badge)](https://vscode.dev/redirect/mcp/install?%7B%22name%22%3A%22trackpac%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.trackpac.io%2Fmcp%22%2C%22headers%22%3A%7B%22X-API-Key%22%3A%22%24%7Binput%3AtrackpacApiKey%7D%22%7D%2C%22inputs%22%3A%5B%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22trackpacApiKey%22%2C%22description%22%3A%22Trackpac%20API%20key%22%2C%22password%22%3Atrue%7D%5D%7D)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Trackpac-007ACC?style=for-the-badge)](https://vscode.dev/redirect/mcp/install?name=trackpac&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.trackpac.io%2Fmcp%22%2C%22headers%22%3A%7B%22X-API-Key%22%3A%22%24%7Binput%3AtrackpacApiKey%7D%22%7D%7D&inputs=%5B%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22trackpacApiKey%22%2C%22description%22%3A%22Trackpac%20API%20key%22%2C%22password%22%3Atrue%7D%5D)
 [![Add to Cursor](https://img.shields.io/badge/Cursor-Add_Trackpac-181818?style=for-the-badge)](https://cursor.com/en/install-mcp?name=trackpac&config=eyJ1cmwiOiJodHRwczovL21jcC50cmFja3BhYy5pby9tY3AiLCJoZWFkZXJzIjp7IlgtQVBJLUtleSI6IllPVVJfVFJBQ0tQQUNfQVBJX0tFWSJ9fQ%3D%3D)
 
 VS Code prompts for your API key when the server starts. After installing in Cursor, replace `YOUR_TRACKPAC_API_KEY` in the server configuration with your key before using it. The buttons contain no credentials.

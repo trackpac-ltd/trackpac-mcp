@@ -6,6 +6,8 @@ Connect to `https://mcp.trackpac.io/mcp` with your [Trackpac API key](../README.
 
 Use the **Install in VS Code** button in the [README](../README.md#quick-start), or open the Command Palette and run **MCP: Open User Configuration** for all projects. For one project, create `.vscode/mcp.json` with this configuration:
 
+If your browser blocks the install button or opening VS Code, use the configuration below through **MCP: Open User Configuration**.
+
 ```json
 {
   "servers": {
