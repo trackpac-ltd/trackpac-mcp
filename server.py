@@ -25,9 +25,9 @@ OPENAPI_URL = f"{TRACKPAC_BASE_URL}/openapi.json"
 REQUEST_TIMEOUT = 30
 
 # Ingest and webhook routes are for hardware and network servers to POST to,
-# not for people or assistants to call.
+# not for people or assistants to call. Bases are legacy; geofences replace
+# them, including the location engine's base check.
 EXCLUDED_TAGS = {"Ingest", "Bases"}
-# Bases are legacy; geofences replace them, including the location-engine check.
 EXCLUDED_PATH_PREFIXES = ("/ingest", "/location-engine/base")
 EXCLUDED_PATH_KEYWORDS = ("webhook", "web-hook")
 
