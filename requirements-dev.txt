@@ -7,3 +7,6 @@ pre_commit==4.6.0
 # Code formatting and linting
 black==26.10.1
 ruff==0.17.0
+
+# Testing
+pytest==9.0.1

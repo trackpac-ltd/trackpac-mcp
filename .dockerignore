@@ -1,0 +1,5 @@
+# Allowlist: the image only needs the dependencies and the server.
+*
+!LICENSE
+!requirements.txt
+!server.py

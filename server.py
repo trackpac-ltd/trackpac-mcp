@@ -20,8 +20,10 @@ from fastmcp.server.providers.openapi.routing import MCPType, RouteMap
 from fastmcp.utilities.openapi.models import HTTPRoute
 from mcp.types import ToolAnnotations
 
-TRACKPAC_BASE_URL = "https://api.trackpac.io"
-OPENAPI_URL = f"{TRACKPAC_BASE_URL}/openapi.json"
+TRACKPAC_API_URL = os.environ.get("TRACKPAC_API_URL", "https://api.trackpac.io").rstrip(
+    "/"
+)
+OPENAPI_URL = f"{TRACKPAC_API_URL}/openapi.json"
 REQUEST_TIMEOUT = 30
 
 # Ingest and webhook routes are for hardware and network servers to POST to,
@@ -74,7 +76,7 @@ def build_client() -> httpx2.AsyncClient:
 
     headers = {"X-API-Key": api_key} if api_key else {}
     return httpx2.AsyncClient(
-        base_url=TRACKPAC_BASE_URL, headers=headers, timeout=REQUEST_TIMEOUT
+        base_url=TRACKPAC_API_URL, headers=headers, timeout=REQUEST_TIMEOUT
     )
 
 

@@ -59,13 +59,14 @@ you can revoke one without breaking the others.
 
 ## Configuration
 
-The server reads a single environment variable:
+The server reads these environment variables:
 
-| Variable           | Required | Description           |
-| ------------------ | -------- | --------------------- |
-| `TRACKPAC_API_KEY` | Yes      | Your Trackpac API key |
+| Variable           | Required | Description                                                                          |
+| ------------------ | -------- | ------------------------------------------------------------------------------------ |
+| `TRACKPAC_API_KEY` | Yes      | Your Trackpac API key                                                                |
+| `TRACKPAC_API_URL` | No       | API to talk to, for example staging or a local `v2-api`. Defaults to `https://api.trackpac.io` |
 
-You can set it in your MCP client's config (recommended, see below). For local
+You can set them in your MCP client's config (recommended, see below). For local
 testing, you can instead copy `.env.example` to `.env` and export it in your
 shell.
 
@@ -220,6 +221,24 @@ TRACKPAC_API_KEY=your-key fastmcp run server.py --transport http --port 8000
 
 The endpoint is `http://127.0.0.1:8000/mcp`.
 
+## Docker
+
+CI publishes an image to `ghcr.io/trackpac-ltd/trackpac-mcp` on every push to
+`main` (tagged `latest` and `sha-<commit>`) and on version tags such as `v1.2.0`.
+It runs the server in HTTP mode on port 8000:
+
+```bash
+docker run --rm -p 8000:8000 ghcr.io/trackpac-ltd/trackpac-mcp
+```
+
+To build it yourself, run `docker build -t trackpac-mcp .`.
+
+Without `TRACKPAC_API_KEY`, every caller has to send their own key as an
+`X-API-Key` header, which is the safe default for a shared deployment. Passing
+`-e TRACKPAC_API_KEY=...` makes every request use your key, so only do that
+behind authentication (see the warning under
+[ChatGPT (web)](#chatgpt-web)).
+
 ## Tools
 
 Each tool maps to one Trackpac API endpoint, and its name comes from the
@@ -282,10 +301,19 @@ Restart the server to pick up API changes.
 Issues and pull requests are welcome.
 
 Code is formatted with [Black](https://black.readthedocs.io) and linted with
-[Ruff](https://docs.astral.sh/ruff/); CI runs both on every pull request. To
+[Ruff](https://docs.astral.sh/ruff/), and tested with
+[pytest](https://docs.pytest.org). CI runs all three on every pull request. To
 set up the tools and git hooks locally:
 
 ```bash
 pip install -r requirements-dev.txt
 pre-commit install
+pytest
 ```
+
+## License
+
+Copyright 2026 Trackpac Ltd. Licensed under the
+[Apache License 2.0](LICENSE). The license covers this code only; it grants no
+rights to the Trackpac name or trademarks, and use of the Trackpac API remains
+subject to Trackpac's terms of service.

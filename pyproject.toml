@@ -13,3 +13,7 @@ ignore = ["E501"]  # Let Black handle line length
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
