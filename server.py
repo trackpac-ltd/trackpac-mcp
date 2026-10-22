@@ -1,7 +1,9 @@
 """Expose the Trackpac API as MCP tools using its live OpenAPI spec."""
 
+import base64
 import os
 import sys
+from pathlib import Path
 
 import httpx2
 from fastmcp import FastMCP
@@ -12,7 +14,7 @@ from fastmcp.server.providers.openapi.components import (
 )
 from fastmcp.server.providers.openapi.routing import MCPType, RouteMap
 from fastmcp.utilities.openapi.models import HTTPRoute
-from mcp.types import ToolAnnotations
+from mcp.types import Icon, ToolAnnotations
 
 from trackpac_auth import TrackpacAPIAuth, build_auth
 
@@ -21,6 +23,7 @@ TRACKPAC_API_URL = os.environ.get("TRACKPAC_API_URL", "https://api.trackpac.io")
 )
 OPENAPI_URL = f"{TRACKPAC_API_URL}/openapi.json"
 REQUEST_TIMEOUT = 30
+ICON_PATH = Path(__file__).parent / "assets" / "trackpac-icon.png"
 
 # Exclude hardware webhooks and legacy bases; use geofences instead of bases.
 EXCLUDED_TAGS = {"Ingest", "Bases"}
@@ -93,6 +96,7 @@ def annotate(
 
 def build_server() -> FastMCP:
     auth = build_auth(TRACKPAC_API_URL)
+    icon = base64.b64encode(ICON_PATH.read_bytes()).decode("ascii")
     # GETs become tools because assistants use tools more reliably than resources.
     route_maps = [RouteMap(methods="*", pattern=r".*", mcp_type=MCPType.TOOL)]
 
@@ -100,6 +104,14 @@ def build_server() -> FastMCP:
         openapi_spec=fetch_filtered_spec(),
         client=build_client(oauth_enabled=auth is not None),
         name="Trackpac",
+        website_url="https://trackpac.io",
+        icons=[
+            Icon(
+                src=f"data:image/png;base64,{icon}",
+                mime_type="image/png",
+                sizes=["512x512"],
+            )
+        ],
         auth=auth,
         route_maps=route_maps,
         mcp_component_fn=annotate,

@@ -30,6 +30,7 @@ WORKDIR /app
 
 COPY --from=builder /opt/packages /opt/packages
 COPY LICENSE server.py trackpac_auth.py ./
+COPY assets/trackpac-icon.png ./assets/trackpac-icon.png
 
 EXPOSE 8000
 

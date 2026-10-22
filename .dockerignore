@@ -4,3 +4,5 @@
 !requirements.txt
 !server.py
 !trackpac_auth.py
+!assets/
+!assets/trackpac-icon.png
