@@ -39,12 +39,14 @@ Choose your client for step-by-step hosted setup:
 | Client | Setup |
 | --- | --- |
 | [Claude Desktop](docs/claude-desktop.md) | Local bridge using Node.js and a JSON config |
-| [Claude connectors (web and Desktop)](docs/claude-connectors.md) | Direct hosted connection; requires request-header beta |
+| [Claude connectors (web and Desktop)](docs/claude-connectors.md) | OAuth when enabled by the host, or request-header beta |
 | [Claude Code](docs/claude-code.md) | One terminal command |
 | [VS Code / GitHub Copilot](docs/vscode.md) | Install button or JSON configuration |
 | [Cursor](docs/cursor.md) | Install button or JSON configuration |
 | [Codex](docs/codex.md) | TOML configuration |
-| [ChatGPT](docs/chatgpt.md) | Requires OAuth; not supported by the hosted server yet |
+| [ChatGPT](docs/chatgpt.md) | Requires an OAuth-enabled deployment |
+
+The API-key examples work with the current hosted setup. OAuth requires an endpoint where Trackpac sign-in has been enabled. For a white-label deployment, use the endpoint and sign-in options provided by your deployment operator.
 
 ## Troubleshooting
 
@@ -57,11 +59,14 @@ Choose your client for step-by-step hosted setup:
 - **Full API coverage** of the Trackpac REST API (`https://api.trackpac.io`): users and API keys, organisations, devices, frames, dashboards, assets, reports, actions, contacts, geofences, tags, LNS, billing and the LoRaWAN location engine.
 - **Always in sync.** Tools are generated at startup from Trackpac's live [OpenAPI spec](https://api.trackpac.io/openapi.json) using [FastMCP](https://gofastmcp.com), so new API endpoints show up after a restart with no code changes.
 - **API-key authentication.** Requests are sent with your key in the `X-API-Key` header.
-- **Thin pass-through.** There is no extra caching, retry logic or rate limiting, so your account's normal Trackpac permissions and limits apply.
+- **Optional OAuth.** Clients can sign in with a Trackpac account on OAuth-enabled endpoints. Existing API-key clients remain supported.
+- **Thin pass-through.** API requests have no extra data caching, retry logic or rate limiting, so your account's normal Trackpac permissions and limits apply.
 
 ## Self-hosting and local development
 
-Hosted users can skip this section. To run your own server, install Python 3.10 or newer and clone the repo:
+This repository contains the MCP adapter. The Trackpac platform and backend are separate proprietary services; running this adapter requires a Trackpac account and access to its API.
+
+Hosted users can skip this section. To run the adapter yourself, install Python 3.10 or newer and clone the repo:
 
 ```bash
 git clone https://github.com/trackpac-ltd/trackpac-mcp.git
@@ -75,6 +80,7 @@ pip install -r requirements.txt
 
 | Variable | Required | Description |
 | --- | --- | --- |
+| `TRACKPAC_AUTH` | No | `api-key` (default). `auth0` is available for deployments with a compatible Trackpac sign-in configuration. |
 | `TRACKPAC_API_KEY` | For stdio; omit for shared HTTP hosting | Your Trackpac API key. When set, it takes precedence over callers' `X-API-Key` headers. |
 | `TRACKPAC_API_URL` | No | Defaults to `https://api.trackpac.io`; can point to staging or a local API. |
 
@@ -152,7 +158,7 @@ The legacy **bases** endpoints are left out too. Use geofences instead.
 
 ## Safety
 
-The server exposes **write and delete operations** as well as reads (for example `delete_device_device` and `delete_organisation_organisation`). Your assistant can do anything your API key allows.
+The server exposes **write and delete operations** as well as reads (for example `delete_device_device` and `delete_organisation_organisation`). Your assistant can do anything your Trackpac user or API key allows.
 
 - Use a key from a user with only the access you need.
 - Keep your MCP client's tool-approval prompts turned on for destructive actions.
@@ -160,7 +166,7 @@ The server exposes **write and delete operations** as well as reads (for example
 
 ## Customising
 
-All the logic lives in [`server.py`](server.py):
+API tool generation lives in [`server.py`](server.py), and authentication lives in [`trackpac_auth.py`](trackpac_auth.py):
 
 - **Exclude more endpoints**: add tags to `EXCLUDED_TAGS`, path prefixes to `EXCLUDED_PATH_PREFIXES`, or path keywords to `EXCLUDED_PATH_KEYWORDS`.
 - **Reduce the tool count**: change `route_maps` so `GET` endpoints become MCP resources (`MCPType.RESOURCE` / `MCPType.RESOURCE_TEMPLATE`) instead of tools. This roughly halves the tool list. It's handy if your client struggles with long tool lists, but some assistants work less reliably with resources.
@@ -171,7 +177,7 @@ At startup, `server.py`:
 
 1. Fetches `https://api.trackpac.io/openapi.json`.
 2. Removes the excluded webhook routes.
-3. Passes the spec to `FastMCP.from_openapi()` with an HTTP client that carries your API key.
+3. Passes the spec to `FastMCP.from_openapi()` with an HTTP client that supplies the caller's API key or verified Auth0 API token.
 
 Restart the server to pick up API changes.
 

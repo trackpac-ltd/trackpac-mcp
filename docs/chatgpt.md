@@ -2,6 +2,13 @@
 
 [← Back to client setup](../README.md#client-setup)
 
-**The hosted server does not support direct ChatGPT connections yet.** ChatGPT cannot send a custom `X-API-Key` header. Supporting authenticated per-user access requires OAuth on the MCP server or an OAuth gateway that maps each signed-in user to their Trackpac credentials. Selecting "No authentication" does not give ChatGPT access to your Trackpac account.
+ChatGPT requires an OAuth-enabled Trackpac endpoint. Your deployment operator must enable Trackpac sign-in before you can connect. An API-key-only server cannot authenticate ChatGPT requests because ChatGPT cannot send a custom `X-API-Key` header.
 
-See [OpenAI's authentication requirements](https://developers.openai.com/plugins/build/auth).
+Once the host has enabled OAuth:
+
+1. Open ChatGPT's **Plugins** page and choose **Add custom MCP server**. This option requires access to custom MCP servers in your account or workspace.
+2. Name it **Trackpac** and enter `https://mcp.trackpac.io/mcp` as the server URL.
+3. Choose **OAuth**, create the connection, and complete the Trackpac login and consent prompts. The server supports dynamic client registration, so you do not need to enter the Auth0 application's client secret here.
+4. Enable Trackpac in a chat and ask **"List my Trackpac devices."**
+
+See [OpenAI's custom MCP server guide](https://developers.openai.com/api/docs/guides/custom-mcp-server) and [authentication requirements](https://developers.openai.com/plugins/build/auth).
