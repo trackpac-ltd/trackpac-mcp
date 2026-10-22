@@ -14,7 +14,7 @@ and more.
 
 - **Full API coverage** of the Trackpac REST API (`https://api.trackpac.io`):
   users and API keys, organisations, devices, frames, dashboards, assets,
-  reports, actions, contacts, geofences, bases, tags, LNS, billing and the
+  reports, actions, contacts, geofences, tags, LNS, billing and the
   LoRaWAN location engine.
 - **Always in sync.** Tools are generated at startup from Trackpac's live
   [OpenAPI spec](https://api.trackpac.io/openapi.json) using
