@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "trackpac": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.trackpac.io/mcp",
+        "--header",
+        "X-API-Key:${TRACKPAC_API_KEY}"
+      ],
+      "env": {
+        "TRACKPAC_API_KEY": "YOUR_TRACKPAC_API_KEY"
+      }
+    }
+  }
+}
