@@ -8,7 +8,8 @@ built automatically from Trackpac's published OpenAPI spec
 Device-ingest webhook routes (`/ingest/*`, tag "Ingest") are deliberately
 excluded — those are one-way endpoints that hardware/LoRaWAN network servers
 POST raw sensor payloads to, not something a human or an assistant would ever
-call.
+call. Legacy base routes (tag "Bases", plus the location engine's base check)
+are excluded too; geofences replace them.
 
 Auth
 ----
@@ -43,8 +44,10 @@ TRACKPAC_BASE_URL = "https://api.trackpac.io"
 OPENAPI_URL = f"{TRACKPAC_BASE_URL}/openapi.json"
 
 # Tags/path prefixes we never want to expose as callable tools.
-EXCLUDED_TAGS = {"Ingest"}
-EXCLUDED_PATH_PREFIXES = ("/ingest",)
+EXCLUDED_TAGS = {"Ingest", "Bases"}
+# Bases are a legacy feature superseded by geofences, so the location engine's
+# base check goes with them even though it's tagged "LoRaWAN Location Engine".
+EXCLUDED_PATH_PREFIXES = ("/ingest", "/location-engine/base")
 # Webhook receivers outside /ingest are the same shape as an ingest route (an
 # external system POSTs to them and they aren't meant to be called directly),
 # so any path containing one of these keywords is excluded too.

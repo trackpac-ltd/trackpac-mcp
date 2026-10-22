@@ -228,14 +228,16 @@ endpoint's OpenAPI `operationId`. For example:
 | `create_geofence_geofence_post`      | Create a geofence                 |
 | `send_downlink_device`               | Queue a downlink to a device      |
 
-As of Trackpac API v2.5.15 the server exposes about 150 tools. Your MCP client
-lists the exact set when it connects.
+The server currently exposes about 130 tools. The exact number changes as the
+Trackpac API evolves, and your MCP client lists the full set when it connects.
 
 ### Excluded endpoints
 
 Some endpoints exist only for machine-to-machine traffic, not for people, so
 the server leaves them out. The main example is `/ingest/*`, the webhook
 endpoints where LoRaWAN network servers and hardware send raw sensor payloads.
+
+The legacy **bases** endpoints are left out too. Use geofences instead.
 
 ## Safety
 
