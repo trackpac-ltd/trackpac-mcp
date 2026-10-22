@@ -1,10 +1,4 @@
-"""
-Trackpac MCP server: exposes the Trackpac API as MCP tools, generated from its
-live OpenAPI spec. Authenticates with an API key only (X-API-Key), never a
-bearer token. See README.md for setup.
-"""
-
-from __future__ import annotations
+"""Expose the Trackpac API as MCP tools using its live OpenAPI spec."""
 
 import os
 import sys
@@ -20,15 +14,15 @@ from fastmcp.server.providers.openapi.routing import MCPType, RouteMap
 from fastmcp.utilities.openapi.models import HTTPRoute
 from mcp.types import ToolAnnotations
 
+from trackpac_auth import TrackpacAPIAuth, build_auth
+
 TRACKPAC_API_URL = os.environ.get("TRACKPAC_API_URL", "https://api.trackpac.io").rstrip(
     "/"
 )
 OPENAPI_URL = f"{TRACKPAC_API_URL}/openapi.json"
 REQUEST_TIMEOUT = 30
 
-# Ingest and webhook routes are for hardware and network servers to POST to,
-# not for people or assistants to call. Bases are legacy; geofences replace
-# them, including the location engine's base check.
+# Exclude hardware webhooks and legacy bases; use geofences instead of bases.
 EXCLUDED_TAGS = {"Ingest", "Bases"}
 EXCLUDED_PATH_PREFIXES = ("/ingest", "/location-engine/base")
 EXCLUDED_PATH_KEYWORDS = ("webhook", "web-hook")
@@ -65,9 +59,9 @@ def fetch_filtered_spec() -> dict:
     return spec
 
 
-def build_client() -> httpx2.AsyncClient:
+def build_client(*, oauth_enabled: bool = False) -> httpx2.AsyncClient:
     api_key = os.environ.get("TRACKPAC_API_KEY")
-    if not api_key:
+    if not api_key and not oauth_enabled:
         print(
             "trackpac-mcp: no TRACKPAC_API_KEY set, so every request must carry "
             "the caller's own X-API-Key header (hosted HTTP mode).",
@@ -76,7 +70,10 @@ def build_client() -> httpx2.AsyncClient:
 
     headers = {"X-API-Key": api_key} if api_key else {}
     return httpx2.AsyncClient(
-        base_url=TRACKPAC_API_URL, headers=headers, timeout=REQUEST_TIMEOUT
+        base_url=TRACKPAC_API_URL,
+        headers=headers,
+        timeout=REQUEST_TIMEOUT,
+        auth=TrackpacAPIAuth(oauth_enabled=oauth_enabled),
     )
 
 
@@ -86,7 +83,7 @@ def annotate(
 ) -> None:
     if not isinstance(component, OpenAPITool):
         return
-    # v2-api keeps state-changing GETs out of the public schema, so GET means read.
+    # The API keeps state-changing GETs out of its public schema, so GET always means read.
     method = route.method.upper()
     if method == "GET":
         component.annotations = ToolAnnotations(read_only_hint=True)
@@ -95,14 +92,15 @@ def annotate(
 
 
 def build_server() -> FastMCP:
-    # Assistants call tools far more reliably than they read resources, so GETs
-    # become tools too.
+    auth = build_auth(TRACKPAC_API_URL)
+    # GETs become tools because assistants use tools more reliably than resources.
     route_maps = [RouteMap(methods="*", pattern=r".*", mcp_type=MCPType.TOOL)]
 
     return FastMCP.from_openapi(
         openapi_spec=fetch_filtered_spec(),
-        client=build_client(),
+        client=build_client(oauth_enabled=auth is not None),
         name="Trackpac",
+        auth=auth,
         route_maps=route_maps,
         mcp_component_fn=annotate,
     )

@@ -29,7 +29,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY --from=builder /opt/packages /opt/packages
-COPY LICENSE server.py ./
+COPY LICENSE server.py trackpac_auth.py ./
 
 EXPOSE 8000
 

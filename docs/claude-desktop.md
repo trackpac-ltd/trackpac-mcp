@@ -43,6 +43,6 @@ Keep `${TRACKPAC_API_KEY}` in `args` as written; put your key in the `env` value
 
 Check the error in **Settings → Developer**. If `npx` is missing, confirm `npx --version` works in your terminal and fully restart Claude. If needed, find its full path with `which npx` (macOS) or `where.exe npx` (Windows) and use that as `command`. Escape Windows backslashes as `\\` in JSON.
 
-For account-wide connections through Claude's UI, see the separate [Claude connectors guide](claude-connectors.md). Its API-key option currently requires access to Anthropic's request-header beta.
+For account-wide connections through Claude's UI, see the [Claude connectors guide](claude-connectors.md). OAuth works when enabled by the host; the direct API-key option requires Anthropic's request-header beta.
 
 References: [Claude Desktop configuration](https://modelcontextprotocol.io/docs/develop/connect-local-servers) and [mcp-remote](https://github.com/punkpeye/mcp-remote).
