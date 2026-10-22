@@ -140,6 +140,11 @@ way to reach it.
 > and change your Trackpac account**. Don't put it on the public internet without
 > authentication in front of it. The Secure MCP Tunnel option below avoids this.
 
+**Hosting for several people:** start the server **without** `TRACKPAC_API_KEY`.
+Each MCP client then sends its own key as an `X-API-Key` header, the server
+forwards it, and every caller can only do what their own key allows. Calls
+without a key are rejected by the Trackpac API.
+
 **1. Run the server in HTTP mode**
 
 ```bash
@@ -275,3 +280,12 @@ Restart the server to pick up API changes.
 ## Contributing
 
 Issues and pull requests are welcome.
+
+Code is formatted with [Black](https://black.readthedocs.io) and linted with
+[Ruff](https://docs.astral.sh/ruff/); CI runs both on every pull request. To
+set up the tools and git hooks locally:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+```
