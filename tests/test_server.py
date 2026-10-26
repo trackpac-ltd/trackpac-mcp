@@ -4,6 +4,7 @@ import importlib
 import sys
 
 import httpx2
+import pytest
 from fastmcp import Client
 
 OK = {"200": {"description": "OK"}}
@@ -71,7 +72,13 @@ SPEC = {
 
 
 def load_server(monkeypatch, **env):
-    for name in ("TRACKPAC_API_KEY", "TRACKPAC_API_URL"):
+    for name in (
+        "TRACKPAC_API_KEY",
+        "TRACKPAC_API_URL",
+        "MCP_SERVER_NAME",
+        "MCP_WEBSITE_URL",
+        "MCP_ICON_URL",
+    ):
         monkeypatch.delenv(name, raising=False)
     for name, value in env.items():
         monkeypatch.setenv(name, value)
@@ -141,3 +148,29 @@ def test_api_key_header_is_only_sent_when_configured(monkeypatch):
 
     server, _ = load_server(monkeypatch)
     assert "X-API-Key" not in server.build_client().headers
+
+
+def test_branding_defaults_to_trackpac(monkeypatch):
+    server, _ = load_server(monkeypatch)
+
+    assert server.mcp.name == "Trackpac"
+    assert server.mcp.website_url == "https://trackpac.io"
+    assert server.mcp.icons[0].src.startswith("data:image/png;base64,")
+
+
+def test_branding_can_be_overridden(monkeypatch):
+    server, _ = load_server(
+        monkeypatch,
+        MCP_SERVER_NAME="Connect IoT",
+        MCP_WEBSITE_URL="https://connect-iot.eu",
+        MCP_ICON_URL="https://connect-iot.eu/logo.png",
+    )
+
+    assert server.mcp.name == "Connect IoT"
+    assert server.mcp.website_url == "https://connect-iot.eu"
+    assert server.mcp.icons[0].src == "https://connect-iot.eu/logo.png"
+
+
+def test_icon_url_must_be_https(monkeypatch):
+    with pytest.raises(ValueError, match="MCP_ICON_URL"):
+        load_server(monkeypatch, MCP_ICON_URL="http://connect-iot.eu/logo.png")

@@ -24,6 +24,10 @@ TRACKPAC_API_URL = os.environ.get("TRACKPAC_API_URL", "https://api.trackpac.io")
 OPENAPI_URL = f"{TRACKPAC_API_URL}/openapi.json"
 REQUEST_TIMEOUT = 30
 ICON_PATH = Path(__file__).parent / "assets" / "trackpac-icon.png"
+# Branding shown on the OAuth consent page and in MCP clients; whitelabels override these.
+SERVER_NAME = os.environ.get("MCP_SERVER_NAME", "Trackpac")
+WEBSITE_URL = os.environ.get("MCP_WEBSITE_URL", "https://trackpac.io")
+ICON_URL = os.environ.get("MCP_ICON_URL", "")
 
 # Exclude hardware webhooks and legacy bases; use geofences instead of bases.
 EXCLUDED_TAGS = {"Ingest", "Bases"}
@@ -94,24 +98,31 @@ def annotate(
         component.annotations = ToolAnnotations(destructive_hint=True)
 
 
+def build_icon() -> Icon:
+    if not ICON_URL:
+        icon = base64.b64encode(ICON_PATH.read_bytes()).decode("ascii")
+        return Icon(
+            src=f"data:image/png;base64,{icon}",
+            mime_type="image/png",
+            sizes=["512x512"],
+        )
+    # The consent page CSP only allows https: and data: images.
+    if not ICON_URL.startswith("https://"):
+        raise ValueError("MCP_ICON_URL must be an https:// URL")
+    return Icon(src=ICON_URL)
+
+
 def build_server() -> FastMCP:
     auth = build_auth(TRACKPAC_API_URL)
-    icon = base64.b64encode(ICON_PATH.read_bytes()).decode("ascii")
     # GETs become tools because assistants use tools more reliably than resources.
     route_maps = [RouteMap(methods="*", pattern=r".*", mcp_type=MCPType.TOOL)]
 
     return FastMCP.from_openapi(
         openapi_spec=fetch_filtered_spec(),
         client=build_client(oauth_enabled=auth is not None),
-        name="Trackpac",
-        website_url="https://trackpac.io",
-        icons=[
-            Icon(
-                src=f"data:image/png;base64,{icon}",
-                mime_type="image/png",
-                sizes=["512x512"],
-            )
-        ],
+        name=SERVER_NAME,
+        website_url=WEBSITE_URL,
+        icons=[build_icon()],
         auth=auth,
         route_maps=route_maps,
         mcp_component_fn=annotate,

@@ -83,6 +83,9 @@ pip install -r requirements.txt
 | `TRACKPAC_AUTH` | No | `api-key` (default). `auth0` is available for deployments with a compatible Trackpac sign-in configuration. |
 | `TRACKPAC_API_KEY` | For stdio; omit for shared HTTP hosting | Your Trackpac API key. When set, it takes precedence over callers' `X-API-Key` headers. |
 | `TRACKPAC_API_URL` | No | Defaults to `https://api.trackpac.io`; can point to staging or a local API. |
+| `MCP_SERVER_NAME` | No | Name on the sign-in consent page and in MCP clients. Defaults to `Trackpac`. |
+| `MCP_WEBSITE_URL` | No | Link behind the name on the consent page. Defaults to `https://trackpac.io`. |
+| `MCP_ICON_URL` | No | `https://` URL of a square logo (e.g. 512×512 PNG) for the consent page and MCP clients. Defaults to the bundled Trackpac icon. |
 
 For local testing, you can copy `.env.example` to `.env` and export its values in your shell. The server does not automatically load `.env` files.
 
