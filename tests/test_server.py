@@ -12,6 +12,7 @@ DEVICE_ID = {
     "name": "device_id",
     "in": "path",
     "required": True,
+    "description": "Internal numeric device ID from list_devices.",
     "schema": {"type": "integer"},
 }
 
@@ -22,6 +23,8 @@ SPEC = {
         "/device": {
             "get": {
                 "operationId": "list_devices",
+                "summary": "List devices",
+                "description": "Lists devices available to the current user.",
                 "tags": ["Devices"],
                 "responses": OK,
             },
@@ -67,11 +70,46 @@ SPEC = {
                 "responses": OK,
             },
         },
+        "/action/assign": {
+            "post": {
+                "operationId": "assign_action",
+                "summary": "Assign actions",
+                "description": "Assigns the selected actions to a device.",
+                "tags": ["Actions"],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["device_id", "actions"],
+                                "properties": {
+                                    "device_id": {
+                                        "type": "integer",
+                                        "description": "Device ID from list_devices.",
+                                    },
+                                    "actions": {
+                                        "type": "array",
+                                        "description": "Action IDs from list_actions.",
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["id"],
+                                            "properties": {"id": {"type": "integer"}},
+                                        },
+                                    },
+                                },
+                            }
+                        }
+                    },
+                },
+                "responses": OK,
+            },
+        },
     },
 }
 
 
-def load_server(monkeypatch, **env):
+def load_server(monkeypatch, spec=SPEC, **env):
     for name in (
         "TRACKPAC_API_KEY",
         "TRACKPAC_API_URL",
@@ -88,7 +126,7 @@ def load_server(monkeypatch, **env):
     def fake_get(url, **kwargs):
         requested.append(url)
         return httpx2.Response(
-            200, json=copy.deepcopy(SPEC), request=httpx2.Request("GET", url)
+            200, json=copy.deepcopy(spec), request=httpx2.Request("GET", url)
         )
 
     monkeypatch.setattr(httpx2, "get", fake_get)
@@ -112,6 +150,7 @@ def test_only_callable_routes_become_tools(monkeypatch):
         "update_device",
         "delete_device",
         "create_mixed",
+        "assign_action",
     }
 
 
@@ -174,3 +213,22 @@ def test_branding_can_be_overridden(monkeypatch):
 def test_icon_url_must_be_https(monkeypatch):
     with pytest.raises(ValueError, match="MCP_ICON_URL"):
         load_server(monkeypatch, MCP_ICON_URL="http://connect-iot.eu/logo.png")
+
+
+def test_openapi_metadata_reaches_generated_tools(monkeypatch):
+    server, _ = load_server(monkeypatch)
+    tools = list_tools(server.mcp)
+
+    assert (
+        tools["list_devices"].description
+        == "Lists devices available to the current user."
+    )
+    assert (
+        tools["delete_device"].input_schema["properties"]["device_id"]["description"]
+        == "Internal numeric device ID from list_devices."
+    )
+    assign = tools["assign_action"]
+    assert assign.description == "Assigns the selected actions to a device."
+    actions = assign.input_schema["properties"]["actions"]
+    assert actions["description"] == "Action IDs from list_actions."
+    assert actions["items"]["properties"]["id"]["type"] == "integer"

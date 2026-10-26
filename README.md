@@ -143,15 +143,15 @@ Each caller supplies their own `X-API-Key` header. To build the image yourself, 
 
 Each tool maps to one Trackpac API endpoint, and its name comes from the endpoint's OpenAPI `operationId`. For example:
 
-| Tool                                 | What it does                      |
-| ------------------------------------ | --------------------------------- |
-| `get_organisations_organisation_get` | List your organisations           |
-| `read_devices_device_get`            | List devices                      |
-| `read_frames_frame`                  | Read uplink frames for a device   |
-| `create_geofence_geofence_post`      | Create a geofence                 |
-| `send_downlink_device`               | Queue a downlink to a device      |
+| Tool                 | What it does                    |
+| -------------------- | ------------------------------- |
+| `list_organisations` | List your organisations         |
+| `list_devices`       | List devices                    |
+| `list_device_frames` | Read uplink frames for a device |
+| `create_geofence`    | Create a geofence               |
+| `send_downlink`      | Queue a downlink to a device    |
 
-The server currently exposes about 130 tools. The exact number changes as the Trackpac API evolves, and your MCP client lists the full set when it connects.
+The server currently exposes about 128 tools. The exact number changes as the Trackpac API evolves, and your MCP client lists the full set when it connects.
 
 ### Excluded endpoints
 
@@ -161,7 +161,7 @@ The legacy **bases** endpoints are left out too. Use geofences instead.
 
 ## Safety
 
-The server exposes **write and delete operations** as well as reads (for example `delete_device_device` and `delete_organisation_organisation`). Your assistant can do anything your Trackpac user or API key allows.
+The server exposes **write and delete operations** as well as reads (for example `delete_device` and `delete_organisation`). Your assistant can do anything your Trackpac user or API key allows.
 
 - Use a key from a user with only the access you need.
 - Keep your MCP client's tool-approval prompts turned on for destructive actions.
@@ -195,6 +195,8 @@ pip install -r requirements-dev.txt
 pre-commit install
 pytest
 ```
+
+Tool conversion tests use a small local OpenAPI example. The running server builds its tools from the API schema when it starts, so API changes do not require a synchronized schema or tool-name list in this repository.
 
 ## License
 
