@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import httpx2
 from fastmcp.server.auth import AccessToken
 from fastmcp.server.auth.oidc_proxy import OIDCProxy
-from fastmcp.server.dependencies import get_access_token
+from fastmcp.server.dependencies import get_access_token, get_context
 from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser, BearerAuthBackend
 from starlette.authentication import AuthCredentials
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -69,6 +69,14 @@ class TrackpacAuth0Provider(OIDCProxy):
         return middleware
 
 
+def mcp_client_name() -> str | None:
+    try:
+        params = get_context().session.client_params
+    except RuntimeError:
+        return None
+    return params.client_info.name[:40] if params and params.client_info else None
+
+
 class TrackpacAPIAuth(httpx2.Auth):
     """Inject credentials into each outgoing request without changing shared state."""
 
@@ -78,6 +86,8 @@ class TrackpacAPIAuth(httpx2.Auth):
     def auth_flow(self, request):
         # Use the resolved Auth0 token; never forward the incoming MCP session token.
         request.headers.pop("Authorization", None)
+        if client := mcp_client_name():
+            request.headers["X-MCP-Client"] = client
         if self.oauth_enabled:
             token = get_access_token()
             if token is None:

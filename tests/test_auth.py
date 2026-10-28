@@ -16,6 +16,7 @@ from fastmcp.server.auth.oidc_proxy import _clear_oidc_configuration_cache
 from fastmcp.server.auth.providers.jwt import JWTVerifier
 from joserfc import jwt
 from joserfc.jwk import RSAKey
+from mcp.types import Implementation
 from starlette.requests import HTTPConnection
 from starlette.testclient import TestClient
 
@@ -490,3 +491,32 @@ def test_api_key_backend_rejects_unavailable_api(oauth_config, monkeypatch):
     conn = HTTPConnection({"type": "http", "headers": [(b"x-api-key", b"alice")]})
     backend = TrackpacAuthBackend(oauth_config, "https://api.trackpac.io")
     assert asyncio.run(backend.authenticate(conn)) is None
+
+
+def test_tool_calls_tell_the_api_which_mcp_client_made_them():
+    observed = []
+
+    def respond(request):
+        observed.append(dict(request.headers))
+        return httpx2.Response(200, json={})
+
+    spec = {
+        "openapi": "3.1.0",
+        "info": {"title": "t", "version": "1"},
+        "paths": {"/device": {"get": {"operationId": "list_devices", "responses": {}}}},
+    }
+    api = httpx2.AsyncClient(
+        base_url="https://api.trackpac.io",
+        transport=httpx2.MockTransport(respond),
+        auth=TrackpacAPIAuth(oauth_enabled=False),
+    )
+    server = FastMCP.from_openapi(openapi_spec=spec, client=api)
+
+    async def run():
+        async with fastmcp.Client(
+            server, client_info=Implementation(name="claude-ai", version="1")
+        ) as client:
+            await client.call_tool("list_devices", {})
+
+    asyncio.run(run())
+    assert observed[0]["x-mcp-client"] == "claude-ai"
