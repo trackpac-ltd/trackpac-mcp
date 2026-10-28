@@ -497,7 +497,8 @@ def test_api_key_backend_rejects_unavailable_api(oauth_config, monkeypatch):
     ("name", "header"),
     [
         ("claude-ai", "claude-ai"),
-        ("Café 🤖", "Caf "),
+        ("Café 🤖", "Caf"),
+        ("a" * 39 + " cut", "a" * 39),
         ("evil\r\nX-API-Key: stolen", "evilX-API-Key: stolen"),
         ("🤖", None),
     ],

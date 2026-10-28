@@ -77,7 +77,7 @@ def mcp_client_name() -> str | None:
         return None
     if not params or not params.client_info:
         return None
-    return re.sub(r"[^\x20-\x7e]", "", params.client_info.name)[:40] or None
+    return re.sub(r"[^\x20-\x7e]", "", params.client_info.name)[:40].strip() or None
 
 
 class TrackpacAPIAuth(httpx2.Auth):
