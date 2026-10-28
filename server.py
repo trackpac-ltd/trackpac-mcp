@@ -23,6 +23,7 @@ TRACKPAC_API_URL = os.environ.get("TRACKPAC_API_URL", "https://api.trackpac.io")
 )
 OPENAPI_URL = f"{TRACKPAC_API_URL}/openapi.json"
 REQUEST_TIMEOUT = 30
+VERSION = os.environ.get("TRACKPAC_MCP_VERSION", "dev")
 ICON_PATH = Path(__file__).parent / "assets" / "trackpac-icon.png"
 # Branding shown on the OAuth consent page and in MCP clients; whitelabels override these.
 SERVER_NAME = os.environ.get("MCP_SERVER_NAME", "Trackpac")
@@ -75,7 +76,9 @@ def build_client(*, oauth_enabled: bool = False) -> httpx2.AsyncClient:
             file=sys.stderr,
         )
 
-    headers = {"X-API-Key": api_key} if api_key else {}
+    headers = {"User-Agent": f"trackpac-mcp/{VERSION}"}
+    if api_key:
+        headers["X-API-Key"] = api_key
     return httpx2.AsyncClient(
         base_url=TRACKPAC_API_URL,
         headers=headers,

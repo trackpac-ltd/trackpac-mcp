@@ -18,8 +18,11 @@ RUN pip install --only-binary=:all: --no-compile \
 # Stage 2: Distroless runtime
 FROM gcr.io/distroless/python3-debian13:nonroot
 
+ARG VERSION=dev
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    TRACKPAC_MCP_VERSION=$VERSION \
     PYTHONPATH=/opt/packages \
     FASTMCP_TRANSPORT=http \
     FASTMCP_HOST=0.0.0.0 \
