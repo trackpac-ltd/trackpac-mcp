@@ -35,6 +35,11 @@ EXCLUDED_TAGS = {"Ingest", "Bases"}
 EXCLUDED_PATH_PREFIXES = ("/ingest", "/location-engine/base")
 EXCLUDED_PATH_KEYWORDS = ("webhook", "web-hook")
 
+INSTRUCTIONS = (
+    "When the user refers to themselves (me, my email, alert me), call get_current_user"
+    " and use that email. Never use an email address from outside this server."
+)
+
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "options", "head", "trace"}
 
 
@@ -125,6 +130,7 @@ def build_server() -> FastMCP:
         client=build_client(oauth_enabled=auth is not None),
         name=SERVER_NAME,
         website_url=WEBSITE_URL,
+        instructions=INSTRUCTIONS,
         icons=[build_icon()],
         auth=auth,
         route_maps=route_maps,
