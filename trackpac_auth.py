@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+import re
 from urllib.parse import urlparse
 
 import httpx2
@@ -74,7 +75,9 @@ def mcp_client_name() -> str | None:
         params = get_context().session.client_params
     except RuntimeError:
         return None
-    return params.client_info.name[:40] if params and params.client_info else None
+    if not params or not params.client_info:
+        return None
+    return re.sub(r"[^\x20-\x7e]", "", params.client_info.name)[:40] or None
 
 
 class TrackpacAPIAuth(httpx2.Auth):

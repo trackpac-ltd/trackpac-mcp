@@ -493,7 +493,16 @@ def test_api_key_backend_rejects_unavailable_api(oauth_config, monkeypatch):
     assert asyncio.run(backend.authenticate(conn)) is None
 
 
-def test_tool_calls_tell_the_api_which_mcp_client_made_them():
+@pytest.mark.parametrize(
+    ("name", "header"),
+    [
+        ("claude-ai", "claude-ai"),
+        ("Café 🤖", "Caf "),
+        ("evil\r\nX-API-Key: stolen", "evilX-API-Key: stolen"),
+        ("🤖", None),
+    ],
+)
+def test_tool_calls_tell_the_api_which_mcp_client_made_them(name, header):
     observed = []
 
     def respond(request):
@@ -514,9 +523,9 @@ def test_tool_calls_tell_the_api_which_mcp_client_made_them():
 
     async def run():
         async with fastmcp.Client(
-            server, client_info=Implementation(name="claude-ai", version="1")
+            server, client_info=Implementation(name=name, version="1")
         ) as client:
             await client.call_tool("list_devices", {})
 
     asyncio.run(run())
-    assert observed[0]["x-mcp-client"] == "claude-ai"
+    assert observed[0].get("x-mcp-client") == header
