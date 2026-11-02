@@ -98,6 +98,8 @@ def annotate(
 ) -> None:
     if not isinstance(component, OpenAPITool):
         return
+    # Exclude output schemas to reduce token usage for eager clients.
+    component.output_schema = None
     # The API keeps state-changing GETs out of its public schema, so GET always means read.
     method = route.method.upper()
     if method == "GET":
