@@ -172,6 +172,19 @@ def test_tools_are_annotated_by_http_method(monkeypatch):
     assert tools["update_device"].annotations is None
 
 
+def test_output_schemas_are_dropped(monkeypatch):
+    spec = copy.deepcopy(SPEC)
+    spec["paths"]["/device"]["get"]["responses"] = {
+        "200": {
+            "description": "OK",
+            "content": {"application/json": {"schema": {"type": "object"}}},
+        }
+    }
+    server, _ = load_server(monkeypatch, spec=spec)
+
+    assert list_tools(server.mcp)["list_devices"].output_schema is None
+
+
 def test_api_url_can_be_overridden(monkeypatch):
     server, requested = load_server(
         monkeypatch, TRACKPAC_API_URL="http://localhost:8000/"
